@@ -1,6 +1,14 @@
+'''
+Written by Thomas Munzer (tmunzer@juniper.net)
+Github repository: https://github.com/tmunzer/Mist_library/
+
+This script can be used to list/add/delete an SSID from Org/Site
+'''
+
 import mlib as mist_lib
 from mlib import cli
 import json
+import sys
 from tabulate import tabulate
 #### PARAMETERS #####
 csv_separator = ","
@@ -15,12 +23,12 @@ def add_wlan():
             wlan  = json.load(f)       
     except:
         print("Error while loading the configuration file... exiting...")
-        exit(255)
+        sys.exit(255)
     try:
         wlan_json = json.dumps(wlan)
     except:
         print("Error while loading the wlan settings from the file... exiting...")
-        exit(255)
+        sys.exit(255)
     mist_lib.requests.sites.wlans.create(mist, site_id, wlan_json)
 
 def remove_wlan(site_id):
@@ -29,25 +37,25 @@ def remove_wlan(site_id):
     while True:    
         print()    
         print("Available WLANs:")
-        i = -1
+        i = 0
         for wlan in wlans:
             i+=1
-            print("%s) %s (id: %s)" % (i, wlan["ssid"], wlan["id"]))        
+            print(f"{i}) {wlan['ssid']} (id: {wlan['id']})")
         print()        
-        resp = input("Which WLAN do you want to delete (0-%s, or q to quit)? " %i)
+        resp = input(f"Which WLAN do you want to delete (0-{i-1}, or q to quit)? ")
         if resp.lower() == "q":
-            exit(0)
+            sys.exit(0)
         else:
             try:
                 resp_num = int(resp)
                 if resp_num >= 0 and resp_num <= i:
                     wlan = wlans[resp_num]
                     print()    
-                    confirmation = input("Are you sure you want to delete WLAN %s (y/N)? " % wlan["ssid"])
+                    confirmation = input(f"Are you sure you want to delete WLAN {wlan['ssid']} (y/N)? ")
                     if confirmation.lower() == "y":
                         break
                 else:
-                    print("%s is not part of the possibilities." % resp_num)
+                    print(f"{resp_num} is not part of the possibilities.")
             except:
                 print("Only numbers are allowed.")
     mist_lib.requests.sites.wlans.delete(mist, site_id, wlan["id"])    
@@ -61,7 +69,7 @@ def display_wlan(site_id):
 
 mist = mist_lib.Mist_Session("./session.py")
 #mist.save()
-site_id = cli.select_site(mist, allow_many=False)
+site_id = cli.select_site(mist, allow_many=False)[0]
 
 while True:
     print()    
@@ -75,11 +83,11 @@ while True:
     i = -1
     for action in actions:
         i+= 1
-        print("%s) %s" % (i, action))
+        print(f"{i}) {action}")
     print()    
-    resp = input("Choice (0-%s, q to quit): " %i)
+    resp = input(f"Choice (0-{i}, q to quit): ")
     if resp.lower() == "q":
-        exit(0)
+        sys.exit(0)
     else:
         try:
             resp_num = int(resp)
@@ -101,7 +109,7 @@ while True:
                     print(" ========================")
                     break
             else:
-                print("%s is not part of the possibilities." % resp_num)
+                print(f"{resp_num} is not part of the possibilities.")
         except:
             print("Only numbers are allowed.")
 

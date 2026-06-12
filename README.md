@@ -1,5 +1,8 @@
-## WORK IN PROGRESS ##
-This repository will continue to evolve in the future, as I will continue to maintin the Mist Library to reflect Mist API changes and add new demo scripts.
+**Warning**
+The script from this repository are not yet adapted to work with the new library. You still have to download the whole repository to get them working. 
+
+This is a work in progress...
+
 
 # Mist_library
  Python library to use [Mist APIs](https://www.mist.com)
@@ -49,7 +52,7 @@ read a CSV file to automatically generate admin invitations
 use APIs to enable autoprovisionning feature
 - ***`org_conf_backup.py`***
 backup all the organisation object, maps, ... to files
-- ***`org_conf_restore.py`***
+- ***`org_conf_deploy.py`***
 restore a backup (done with org_conf_backup.py) to an organisation
 - ***`org_inventoy_backup.py`***
 backup all the devices and their configuration, pictures, ... from an organisation to files

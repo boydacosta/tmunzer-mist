@@ -1,9 +1,11 @@
 
-def get(mist_session, site_id, name="", page=1, limit=100):
+def get(mist_session, site_id, name=None, device_type=None, page=1, limit=100):
     uri = "/api/v1/sites/%s/devices" % site_id
     query={}
-    if name != "":
+    if name:
         query[name] = name
+    if device_type in ["ap", "switch", "gateway", "all"]:
+        query["type"] = device_type
     resp = mist_session.mist_get(uri, site_id=site_id, query=query, page=page, limit=limit)
     return resp
 
@@ -12,11 +14,14 @@ def get_details(mist_session, site_id, device_id):
     resp = mist_session.mist_get(uri, site_id=site_id)
     return resp
 
-def get_stats_devices(mist_session, site_id, device_id=None, page=1, limit=100):
+def get_stats_devices(mist_session, site_id, device_id=None, device_type=None, page=1, limit=100):
     uri = "/api/v1/sites/%s/stats/devices" % site_id
-    if not device_id == None:
+    query={}
+    if device_id:
         uri += "/%s" %device_id
-    resp = mist_session.mist_get(uri, site_id=site_id, page=page, limit=limit)
+    if device_type:
+        query["type"] = device_type
+    resp = mist_session.mist_get(uri, site_id=site_id, query=query, page=page, limit=limit)
     return resp
 
 def create(mist_session, site_id, devices):
@@ -38,8 +43,10 @@ def delete(mist_session, site_id, device_id):
 
 def add_image(mist_session, site_id, device_id, image_num, image_path):
     uri = "/api/v1/sites/%s/devices/%s/image%s" %(site_id, device_id, image_num)
-    files = {'file': open(image_path, 'rb').read()}
+    f= open(image_path, 'rb')
+    files = {'file': f.read()}
     resp = mist_session.mist_post_file(uri, site_id=site_id, files=files)
+    f.close()
     return resp
 
 def set_device_conf(mist_session, site_id, device_id, conf):

@@ -1,6 +1,7 @@
 import mlib as mist_lib
 import json
 from tabulate import tabulate
+import sys
 
 
 def _search_org(orgs, org_id):
@@ -11,21 +12,34 @@ def _search_org(orgs, org_id):
         i+=1
     return None
 
+def _test_choice(val, val_max):
+    try:
+        val_int = int(val)
+        if val_int >= 0 and val_int <= val_max:
+            return val_int
+        else:
+            return -1
+    except:
+        return -2
+
 def select_org(mist_session, allow_many=False):
     i=-1
     org_ids = []
+    resp_ids=[]
+    data = mist_session.privileges
+    data=sorted(data, key=lambda x: x["name"].lower())
     print("\r\nAvailable organizations:")
-    for privilege in mist_session.privileges:
+    for privilege in data:
         if privilege["scope"] == "org" and not privilege["org_id"] in org_ids:
             i+=1
             org_ids.append(privilege["org_id"])
             print("%s) %s (id: %s)" % (i, privilege["name"], privilege["org_id"]))
 
     orgs_with_sites = []
-    for privilege in mist_session.privileges:
+    for privilege in data:
         if privilege["scope"] == "site" and not privilege["org_id"] in org_ids:
             index = _search_org(orgs_with_sites, privilege["org_id"])
-            if index == None:
+            if index is None:
                 i+=1
                 org_ids.append(privilege["org_id"])
                 print("%s) %s (id: %s)" % (i, privilege["org_name"], privilege["org_id"]))
@@ -39,41 +53,52 @@ def select_org(mist_session, allow_many=False):
             else:
                 orgs_with_sites[index]["sites"].append({"site_id": privilege["site_id"], "name": privilege["name"]})
 
-    if allow_many: resp = input("\r\nSelect a Org (0 to %s, \"0,1\" for sites 0 and 1, \"a\" for all, or q to exit): " %i)
-    else: resp = input("\r\nSelect a Org (0 to %s, or q to exit): " %i)
+    if allow_many: resp = input("\r\nSelect an Org (0 to %s, \"0,1\" for sites 0 and 1, \"a\" for all, or q to exit): " %i)
+    else: resp = input("\r\nSelect an Org (0 to %s, or q to exit): " %i)
     if resp == "q":
-        exit(0)
+        sys.exit(0)
     elif resp.lower() == "a" and allow_many:
         return org_ids
-    else:
-        try:
-            resp_num = int(resp)
-            if resp_num >= 0 and resp_num <= i:
-                if allow_many:
-                    return [org_ids[resp_num]]
-                else:
-                    return org_ids[resp_num]
-            else:
-                print("Please enter a number between 0 and %s." %i)
-                return select_org(mist_session)
-        except:
-            print("Please enter a number.")
-            return select_org(mist_session)
+    else:            
+        resp = resp.split(",")
+        if not allow_many and len(resp) > 1 :
+            print("Only one org is allowed, you selected %s" %(len(resp)))
+            return select_org(mist_session, allow_many)
+        for num in resp:
+            tested_val = _test_choice(num, i)
+            if tested_val >= 0:
+                resp_ids.append(org_ids[tested_val])
+            if tested_val == -1:
+                print("%s is not part of the possibilities." % num)
+                return select_org(mist_session, allow_many)
+            if tested_val == -2:
+                print("Only numbers are allowed.")
+                return select_org(mist_session, allow_many)
+        return resp_ids
+
 
 def select_site(mist_session, org_id=None, allow_many=False):
-    if org_id == None:
-        org_id = select_org(mist_session)
     i=-1
     site_ids=[]
     site_choices = []
+    resp_ids=[]
     org_access = False
+
+    if org_id is None:
+        org_id = select_org(mist_session)[0]
+
     for privilege in mist_session.privileges:
         if privilege["scope"] == "org" and privilege["org_id"] == org_id:
             org_access = True
         if privilege["scope"] == "site" and privilege["org_id"] == org_id:
             site_choices.append({"id": privilege["site_id"], "name": privilege["name"]})
+
     if site_choices == [] or org_access == True:
         site_choices = mist_lib.requests.orgs.sites.get(mist_session, org_id)['result']
+
+
+    
+    site_choices=sorted(site_choices, key=lambda x: x["name"].lower())
     print("\r\nAvailable sites:")
     for site in site_choices:        
         i+=1
@@ -81,26 +106,27 @@ def select_site(mist_session, org_id=None, allow_many=False):
         print("%s) %s (id: %s)" % (i, site["name"], site["id"]))
     if allow_many: resp = input("\r\nSelect a Site (0 to %s, \"0,1\" for sites 0 and 1, \"a\" for all, or q to exit): " %i)
     else: resp = input("\r\nSelect a Site (0 to %s, or q to exit): " %i)
+
     if resp.lower() == "q":
-        exit(0)
+        sys.exit(0)
     elif resp.lower() == "a" and allow_many:
         return site_ids
-    else:
-        try:
-            resp = resp.split(",")
-            for num in resp:
-                resp_num = int(num)
-                if resp_num >= 0 and resp_num <= i:
-                    if allow_many:
-                        return [site_choices[resp_num]["id"]]
-                    else:
-                        return site_choices[resp_num]["id"]
-                else:
-                    print("%s is not part of the possibilities." % resp_num)
-                    return select_site(org_id)
-        except:
-            print("Only numbers are allowed.")
+    else:                
+        resp = resp.split(",")
+        if not allow_many and len(resp) > 1 :
+            print("Only one site is allowed, you selected %s" %(len(resp)))
             return select_site(mist_session, org_id, allow_many)
+        for num in resp:
+            tested_val = _test_choice(num, i)
+            if tested_val >= 0:
+                resp_ids.append(site_choices[tested_val]["id"])
+            if tested_val == -1:
+                print("%s is not part of the possibilities." % num)
+                return select_site(mist_session, org_id, allow_many)
+            if tested_val == -2:
+                print("Only numbers are allowed.")
+                return select_site(mist_session, org_id, allow_many)
+        return resp_ids
 
 def show(response, fields=None):
     if "result" in response:
@@ -108,8 +134,8 @@ def show(response, fields=None):
     else:
         data = response
     print("")
-    if type(data) == list:  
-        if fields == None:
+    if type(data) is list:  
+        if fields is None:
             fields = "keys" 
         print(tabulate(data, headers=fields))
     elif type(data) == dict:
@@ -138,7 +164,7 @@ def save_to_csv(csv_file, array_data, fields, csv_separator=","):
         f.write('\r\n')
         for row in array_data:
             for field in row:
-                if field == None:
+                if field is None:
                     f.write("")
                 else:
                     f.write(field)

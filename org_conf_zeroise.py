@@ -1,4 +1,7 @@
 '''
+Written by Thomas Munzer (tmunzer@juniper.net)
+Github repository: https://github.com/tmunzer/Mist_library/
+
 __          __     _____  _   _ _____ _   _  _____ 
 \ \        / /\   |  __ \| \ | |_   _| \ | |/ ____|
  \ \  /\  / /  \  | |__) |  \| | | | |  \| | |  __ 
@@ -37,9 +40,8 @@ ids_to_not_delete = []
 #### IMPORTS ####
 import mlib as mist_lib
 from mlib import cli
-from tabulate import tabulate
-import json
 from mlib.__debug import Console
+import sys
 console = Console(6)
 
 #### FUNCTIONS ####
@@ -59,7 +61,7 @@ def display_warning(message):
         resp = input(message)
     if not resp.lower()=="y":
         console.warning("User Interruption... Exiting...")
-        exit(0)
+        sys.exit(0)
 
 def start_delete(org_id):
     object_names = [
@@ -67,13 +69,19 @@ def start_delete(org_id):
                 "assetfilters",
                 "alarmtemplates",
                 "deviceprofiles",
+                "evpn_topologies",
+                "gatewaytemplates",
                 "mxclusters",
                 "mxtunnels",
+                "networks",
+                "networktemplates",
                 "psks",
                 "rftemplates",
                 "secpolicies",
+                "services",
                 "sitegroups",
                 "templates",
+                "vpns",
                 "wlans",
                 "wxrules",
                 "wxtags",
@@ -117,16 +125,16 @@ __          __     _____  _   _ _____ _   _  _____
 
 
 if org_id == "":
-    org_id = cli.select_org(mist_session)
+    org_id = cli.select_org(mist_session)[0]
 org_name = mist_lib.requests.orgs.info.get(mist_session, org_id)["result"]["name"]
 
 check_org_name(org_name)
-display_warning("Are you sure about this? Do you want to remove all the objects from the org %s with the id %s (y/N)? " %(org_name, org_id))
-display_warning("Are you REALLY sure about this? Once accepted, you won't be able to revert changes done on the org %s with id %s (y/N)? " %(org_name, org_id))
+display_warning(f"Are you sure about this? Do you want to remove all the objects from the org {org_name} with the id {org_id} (y/N)? ")
+display_warning(f"Are you REALLY sure about this? Once accepted, you won't be able to revert changes done on the org {org_name} with id {org_id} (y/N)? ")
 
 print()
 create_primary_site(org_id)
 start_delete(org_id)
 
 print()
-console.notice("All objects removed... Organization %s is back to default..." %org_name)
+console.notice(f"All objects removed... Organization {org_name} is back to default...")

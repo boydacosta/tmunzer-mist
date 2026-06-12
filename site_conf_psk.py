@@ -1,4 +1,7 @@
-
+'''
+Written by Thomas Munzer (tmunzer@juniper.net)
+Github repository: https://github.com/tmunzer/Mist_library/
+'''
 
 #### PARAMETERS #####
 psk = {"name":'myUser', "passphrase":'myBadPassword', "ssid":'mySSID', "usage":'multi'}
@@ -6,8 +9,7 @@ psk = {"name":'myUser', "passphrase":'myBadPassword', "ssid":'mySSID', "usage":'
 #### IMPORTS #####
 import mlib as mist_lib
 from mlib import cli
-from tabulate import tabulate
-
+import sys
 #### FUNCTIONS #####
 
 #### SCRIPT ENTRYPOINT #####
@@ -22,7 +24,7 @@ mist_lib.requests.sites.psks.create(mist, site_id, psk.toJSON())
 psks = mist_lib.requests.sites.psks.get(mist, site_id)['result']
 cli.show(psks)
 
-exit(0)
+sys.exit(0)
 """
 for psk in psks:
     mist_lib.requests.sites.psks.delete(mist, site_id, psk_id=psk['id'])

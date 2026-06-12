@@ -1,8 +1,26 @@
 from . import sites
 from . import orgs
+from . import const
 
 def route(level, object_name):
-    if level == "orgs":
+    if level == "const":
+        if object_name == "alarms":
+            return const.alarms
+        elif object_name == "applications":
+            return const.applications
+        elif object_name == "aps":
+            return const.aps
+        elif object_name == "channels":
+            return const.channels
+        elif object_name == "events":
+            return const.events
+        elif object_name == "mxedges":
+            return const.mxedges
+        elif object_name == "sites":
+            return const.sites
+        elif object_name == "traffic":
+            return const.traffic
+    elif level == "orgs":
         if object_name == "":
             return orgs
         elif object_name == "admins":
@@ -11,10 +29,14 @@ def route(level, object_name):
             return orgs.alarmtemplates
         elif object_name == "assetfilters":
             return orgs.assetfilters
-        elif object_name == "channels":
-            return orgs.channels
         elif object_name == "deviceprofiles":
             return orgs.deviceprofiles
+        elif object_name == "evpn_topologies":
+            return orgs.evpn_topologies
+        elif object_name == "gatewaytemplates":
+            return orgs.gatewaytemplates
+        elif object_name == "hubprofiles":
+            return orgs.hubprofiles
         elif object_name == "info":
             return orgs.info
         elif object_name == "inventory":
@@ -27,12 +49,18 @@ def route(level, object_name):
             return orgs.mxedges
         elif object_name == "mxtunnels":
             return orgs.mxtunnels
+        elif object_name == "networks":
+            return orgs.networks
+        elif object_name == "networktemplates":
+            return orgs.networktemplates
         elif object_name == "psks":
             return orgs.psks
         elif object_name == "rftemplates":
             return orgs.rftemplates
         elif object_name == "secpolicies":
             return orgs.secpolicies
+        elif object_name == "services":
+            return orgs.services
         elif object_name == "settings":
             return orgs.settings
         elif object_name == "sitegroups":
@@ -49,6 +77,8 @@ def route(level, object_name):
             return orgs.subscriptions
         elif object_name == "templates":
             return orgs.templates
+        elif object_name == "vpns":
+            return orgs.vpns
         elif object_name == "webhooks":
             return orgs.webhooks
         elif object_name == "wlans":
